@@ -16,12 +16,23 @@ class RecipeViewModel: ViewModel() {
     var meals by mutableStateOf<List<Meal>>(emptyList())
         private set
 
+    var isLoading by mutableStateOf(false)
+        private set
+
+    var errorMessage by mutableStateOf<String?>(null)
+        private set
+
     fun loadRecipes() {
         viewModelScope.launch {
+            isLoading = true
+            errorMessage = null
+
             try {
                 meals = repository.searchRecipes("chicken")
             } catch (e: Exception) {
-                e.printStackTrace()
+                errorMessage = e.message
+            } finally {
+                isLoading = false
             }
         }
     }

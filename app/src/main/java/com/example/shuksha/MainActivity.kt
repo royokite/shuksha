@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.shuksha.presentation.RecipeCard
+import com.example.shuksha.presentation.RecipeScreen
 import com.example.shuksha.viewmodel.RecipeViewModel
 
 class MainActivity : ComponentActivity() {
@@ -26,13 +27,11 @@ class MainActivity : ComponentActivity() {
                 vm.loadRecipes()
             }
 
-            LazyColumn {
-
-                items(vm.meals) { meal ->
-
-                    RecipeCard(meal)
-                }
-            }
+            RecipeScreen(
+                meals = vm.meals,
+                isLoading = vm.isLoading,
+                errorMessage = vm.errorMessage
+            )
         }
     }
 }
