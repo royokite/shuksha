@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.shuksha.presentation.RecipeDetailScreen
 import com.example.shuksha.presentation.RecipeScreen
