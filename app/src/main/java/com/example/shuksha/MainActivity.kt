@@ -3,45 +3,35 @@ package com.example.shuksha
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.shuksha.ui.theme.ShukshaTheme
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.shuksha.presentation.RecipeCard
+import com.example.shuksha.presentation.RecipeScreen
+import com.example.shuksha.viewmodel.RecipeViewModel
 
 class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
+
+    override fun onCreate(
+        savedInstanceState: Bundle?
+    ) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+
         setContent {
-            ShukshaTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+
+            val vm: RecipeViewModel =
+                viewModel()
+
+            LaunchedEffect(Unit) {
+                vm.loadRecipes()
             }
+
+            RecipeScreen(
+                meals = vm.meals,
+                isLoading = vm.isLoading,
+                errorMessage = vm.errorMessage
+            )
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    ShukshaTheme {
-        Greeting("Android")
     }
 }
