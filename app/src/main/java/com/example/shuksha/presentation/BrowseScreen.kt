@@ -4,10 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -33,38 +30,38 @@ import com.example.shuksha.data.CategoryItem
 
 @Composable
 fun BrowseScreen(
-    categories: List<CategoryItem>,
-    areas: List<AreaItem>,
-    isLoadingCategories: Boolean,
-    isLoadingAreas: Boolean,
-    errorMessage: String?,
-    onCategoryClick: (String) -> Unit,
-    onAreaClick: (String) -> Unit
+        categories: List<CategoryItem>,
+        areas: List<AreaItem>,
+        isLoadingCategories: Boolean,
+        isLoadingAreas: Boolean,
+        errorMessage: String?,
+        onCategoryClick: (String) -> Unit,
+        onAreaClick: (String) -> Unit
 ) {
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp)
+            modifier =
+                    Modifier.fillMaxWidth()
+                            .background(MaterialTheme.colorScheme.background)
+                            .padding(16.dp)
     ) {
         item {
             Text(
-                text = "Browse Recipes",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 24.sp
+                    text = "Browse Recipes",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 24.sp
             )
             Spacer(modifier = Modifier.height(20.dp))
         }
 
         item {
             Text(
-                text = "By Category",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                fontSize = 18.sp
+                    text = "By Category",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 18.sp
             )
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -72,33 +69,26 @@ fun BrowseScreen(
         if (isLoadingCategories) {
             item {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .height(100.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                }
+                        modifier = Modifier.fillMaxWidth().height(100.dp),
+                        contentAlignment = Alignment.Center
+                ) { CircularProgressIndicator(color = MaterialTheme.colorScheme.primary) }
             }
         } else if (errorMessage != null) {
             item {
-                Text(
-                    text = "Error loading categories",
-                    color = MaterialTheme.colorScheme.error
-                )
+                Text(text = "Error loading categories", color = MaterialTheme.colorScheme.error)
             }
         } else {
             item {
                 LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
+                        columns = GridCells.Fixed(2),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
                 ) {
                     items(categories) { category ->
                         BrowseItem(
-                            text = category.strCategory,
-                            onClick = { onCategoryClick(category.strCategory) }
+                                text = category.strCategory,
+                                onClick = { onCategoryClick(category.strCategory) }
                         )
                     }
                 }
@@ -108,11 +98,11 @@ fun BrowseScreen(
         item {
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = "By Cuisine",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                fontSize = 18.sp
+                    text = "By Cuisine",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 18.sp
             )
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -120,66 +110,47 @@ fun BrowseScreen(
         if (isLoadingAreas) {
             item {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .height(100.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-                }
+                        modifier = Modifier.fillMaxWidth().height(100.dp),
+                        contentAlignment = Alignment.Center
+                ) { CircularProgressIndicator(color = MaterialTheme.colorScheme.primary) }
             }
         } else {
             item {
                 LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
+                        columns = GridCells.Fixed(2),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
                 ) {
                     items(areas) { area ->
-                        BrowseItem(
-                            text = area.strArea,
-                            onClick = { onAreaClick(area.strArea) }
-                        )
+                        BrowseItem(text = area.strArea, onClick = { onAreaClick(area.strArea) })
                     }
                 }
             }
         }
 
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-        }
+        item { Spacer(modifier = Modifier.height(16.dp)) }
     }
 }
 
 @Composable
-fun BrowseItem(
-    text: String,
-    onClick: () -> Unit
-) {
+fun BrowseItem(text: String, onClick: () -> Unit) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        shape = RoundedCornerShape(12.dp)
+            modifier = Modifier.fillMaxWidth().clickable { onClick() },
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            shape = RoundedCornerShape(12.dp)
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(80.dp)
-                .padding(16.dp),
-            contentAlignment = Alignment.Center
+                modifier = Modifier.fillMaxWidth().height(80.dp).padding(16.dp),
+                contentAlignment = Alignment.Center
         ) {
             Text(
-                text = text,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center
+                    text = text,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
             )
         }
     }

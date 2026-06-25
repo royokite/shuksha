@@ -5,11 +5,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -32,61 +36,51 @@ import com.example.shuksha.data.Meal
 
 @Composable
 fun RecipeDetailScreen(
-    meal: Meal?,
-    isLoading: Boolean,
-    errorMessage: String?,
-    onBackClick: () -> Unit
+        meal: Meal?,
+        isLoading: Boolean,
+        errorMessage: String?,
+        onBackClick: () -> Unit
 ) {
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .systemBarsPadding()
-        .background(MaterialTheme.colorScheme.background)) {
+    Box(
+            modifier =
+                    Modifier.fillMaxSize()
+                        .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top))
+                        .background(MaterialTheme.colorScheme.background)
+    ) {
         when {
             isLoading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             }
-
             errorMessage != null -> {
                 Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center
+                        modifier = Modifier.fillMaxSize().padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center
                 ) {
                     Text(
-                        text = "Error loading recipe",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.error
+                            text = "Error loading recipe",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.error
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = errorMessage,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                            text = errorMessage,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
-
             meal != null -> {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize()
-                ) {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
                     item {
                         // Back button
-                        IconButton(
-                            onClick = onBackClick,
-                            modifier = Modifier.padding(8.dp)
-                        ) {
+                        IconButton(onClick = onBackClick, modifier = Modifier.padding(8.dp)) {
                             Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Back",
-                                tint = MaterialTheme.colorScheme.primary
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -94,50 +88,56 @@ fun RecipeDetailScreen(
                     item {
                         // Recipe image
                         AsyncImage(
-                            model = meal.strMealThumb,
-                            contentDescription = meal.strMeal,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(300.dp)
-                                .clip(RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp)),
-                            contentScale = ContentScale.Crop
+                                model = meal.strMealThumb,
+                                contentDescription = meal.strMeal,
+                                modifier =
+                                        Modifier.fillMaxWidth()
+                                                .height(300.dp)
+                                                .clip(
+                                                        RoundedCornerShape(
+                                                                bottomStart = 16.dp,
+                                                                bottomEnd = 16.dp
+                                                        )
+                                                ),
+                                contentScale = ContentScale.Crop
                         )
                     }
 
                     item {
-                        Column(
-                            modifier = Modifier.padding(16.dp)
-                        ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
                             // Recipe title
                             Text(
-                                text = meal.strMeal,
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontSize = 28.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                    text = meal.strMeal,
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontSize = 28.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
                             )
 
                             Spacer(modifier = Modifier.height(8.dp))
 
                             // Category and Area
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp)
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement =
+                                            androidx.compose.foundation.layout.Arrangement.spacedBy(
+                                                    16.dp
+                                            )
                             ) {
                                 if (!meal.strCategory.isNullOrEmpty()) {
                                     Text(
-                                        text = "${meal.strCategory}",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.Bold
+                                            text = "${meal.strCategory}",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            fontWeight = FontWeight.Bold
                                     )
                                 }
                                 if (!meal.strArea.isNullOrEmpty()) {
                                     Text(
-                                        text = "${meal.strArea}",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.Bold
+                                            text = "${meal.strArea}",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            fontWeight = FontWeight.Bold
                                     )
                                 }
                             }
@@ -146,20 +146,20 @@ fun RecipeDetailScreen(
 
                             // Ingredients section
                             Text(
-                                text = "Ingredients",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
+                                    text = "Ingredients",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
                             )
 
                             Spacer(modifier = Modifier.height(8.dp))
 
                             meal.getIngredientsList().forEach { (ingredient, measure) ->
                                 Text(
-                                    text = "• $measure $ingredient",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier.padding(vertical = 4.dp)
+                                        text = "• $measure $ingredient",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        modifier = Modifier.padding(vertical = 4.dp)
                                 )
                             }
 
@@ -167,18 +167,18 @@ fun RecipeDetailScreen(
 
                             // Instructions section
                             Text(
-                                text = "Instructions",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
+                                    text = "Instructions",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
                             )
 
                             Spacer(modifier = Modifier.height(8.dp))
 
                             Text(
-                                text = meal.strInstructions ?: "No instructions available",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface
+                                    text = meal.strInstructions ?: "No instructions available",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
                             )
 
                             Spacer(modifier = Modifier.height(32.dp))
