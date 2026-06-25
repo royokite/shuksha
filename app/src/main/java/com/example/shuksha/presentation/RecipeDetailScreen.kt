@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -36,7 +37,10 @@ fun RecipeDetailScreen(
     errorMessage: String?,
     onBackClick: () -> Unit
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .systemBarsPadding()
+        .background(MaterialTheme.colorScheme.background)) {
         when {
             isLoading -> {
                 Box(
@@ -77,9 +81,7 @@ fun RecipeDetailScreen(
                         // Back button
                         IconButton(
                             onClick = onBackClick,
-                            modifier = Modifier
-                                .align(Alignment.TopStart)
-                                .padding(8.dp)
+                            modifier = Modifier.padding(8.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -115,6 +117,31 @@ fun RecipeDetailScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
 
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Category and Area
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp)
+                            ) {
+                                if (!meal.strCategory.isNullOrEmpty()) {
+                                    Text(
+                                        text = "${meal.strCategory}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                                if (!meal.strArea.isNullOrEmpty()) {
+                                    Text(
+                                        text = "${meal.strArea}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+
                             Spacer(modifier = Modifier.height(16.dp))
 
                             // Ingredients section
@@ -127,12 +154,14 @@ fun RecipeDetailScreen(
 
                             Spacer(modifier = Modifier.height(8.dp))
 
-                            // Placeholder for ingredients (you'll need to extend Meal data class)
-                            Text(
-                                text = "Ingredient list will appear here",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            meal.getIngredientsList().forEach { (ingredient, measure) ->
+                                Text(
+                                    text = "• $measure $ingredient",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                )
+                            }
 
                             Spacer(modifier = Modifier.height(16.dp))
 
@@ -146,11 +175,10 @@ fun RecipeDetailScreen(
 
                             Spacer(modifier = Modifier.height(8.dp))
 
-                            // Placeholder for instructions
                             Text(
-                                text = "Cooking instructions will appear here",
+                                text = meal.strInstructions ?: "No instructions available",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                color = MaterialTheme.colorScheme.onSurface
                             )
 
                             Spacer(modifier = Modifier.height(32.dp))

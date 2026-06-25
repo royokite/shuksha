@@ -2,7 +2,6 @@ package com.example.shuksha.presentation
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
@@ -27,8 +26,6 @@ fun RecipeCard(
 ) {
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
             .clickable { onClick() },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
@@ -40,22 +37,19 @@ fun RecipeCard(
                 model = meal.strMealThumb,
                 contentDescription = meal.strMeal,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp)
+                    .height(150.dp)
                     .clip(shape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
                 contentScale = ContentScale.Crop
             )
 
             Text(
                 text = meal.strMeal,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
+                modifier = Modifier.padding(12.dp),
                 textAlign = TextAlign.Start,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 16.sp,
+                fontSize = 14.sp,
                 maxLines = 2
             )
         }
