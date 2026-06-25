@@ -7,12 +7,24 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.shuksha.data.Meal
+import com.example.shuksha.data.AreaItem
+import com.example.shuksha.data.CategoryItem
+import com.example.shuksha.navigation.NavItem
 import com.example.shuksha.repository.RecipeRepository
 
 class RecipeViewModel: ViewModel() {
 
     private val repository = RecipeRepository()
 
+    // Navigation
+    var currentNavItem by mutableStateOf(NavItem.HOME)
+        private set
+
+    // Home screen
+    var latestMeals by mutableStateOf<List<Meal>>(emptyList())
+        private set
+
+    // Search screen
     var meals by mutableStateOf<List<Meal>>(emptyList())
         private set
 
@@ -25,6 +37,7 @@ class RecipeViewModel: ViewModel() {
     var searchQuery by mutableStateOf("")
         private set
 
+    // Detail screen
     var selectedMeal by mutableStateOf<Meal?>(null)
         private set
 
@@ -34,7 +47,117 @@ class RecipeViewModel: ViewModel() {
     var detailErrorMessage by mutableStateOf<String?>(null)
         private set
 
-    fun loadRecipes(query: String = "beef") {
+    // Explore screen
+    var randomMeals by mutableStateOf<List<Meal>>(emptyList())
+        private set
+
+    // Browse screen
+    var categories by mutableStateOf<List<CategoryItem>>(emptyList())
+        private set
+
+    var areas by mutableStateOf<List<AreaItem>>(emptyList())
+        private set
+
+    var isLoadingCategories by mutableStateOf(false)
+        private set
+
+    var isLoadingAreas by mutableStateOf(false)
+        private set
+
+    // Browse by letter
+    var browseByLetterResults by mutableStateOf<List<Meal>>(emptyList())
+        private set
+
+    var selectedLetter by mutableStateOf("")
+        private set
+
+    var browseCategoryResults by mutableStateOf<List<Meal>>(emptyList())
+        private set
+
+    var selectedCategory by mutableStateOf("")
+        private set
+
+    var browseAreaResults by mutableStateOf<List<Meal>>(emptyList())
+        private set
+
+    var selectedArea by mutableStateOf("")
+        private set
+
+    init {
+        loadLatestMeals()
+        loadCategoriesAndAreas()
+    }
+
+    fun navigateTo(item: NavItem) {
+        currentNavItem = item
+        when (item) {
+            NavItem.HOME -> loadLatestMeals()
+            NavItem.EXPLORE -> loadRandomMeal()
+            NavItem.SEARCH -> {}
+            NavItem.BROWSE -> {}
+        }
+    }
+
+    private fun loadLatestMeals() {
+        viewModelScope.launch {
+            isLoading = true
+            errorMessage = null
+            try {
+                latestMeals = repository.searchRecipes("a")
+            } catch (e: Exception) {
+                errorMessage = e.message
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    private fun loadRandomMeal() {
+        viewModelScope.launch {
+            isLoading = true
+            errorMessage = null
+            try {
+                val newMeal = repository.getRandomMeal()
+                randomMeals = randomMeals + newMeal
+            } catch (e: Exception) {
+                errorMessage = e.message
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    private fun loadCategoriesAndAreas() {
+        viewModelScope.launch {
+            try {
+                isLoadingCategories = true
+                categories = repository.getCategoryList()
+            } catch (e: Exception) {
+                errorMessage = e.message
+            } finally {
+                isLoadingCategories = false
+            }
+
+            try {
+                isLoadingAreas = true
+                areas = repository.getAreaList()
+            } catch (e: Exception) {
+                errorMessage = e.message
+            } finally {
+                isLoadingAreas = false
+            }
+        }
+    }
+
+    fun onSearchQueryChange(query: String) {
+        searchQuery = query
+    }
+
+    fun performSearch() {
+        loadRecipes(searchQuery)
+    }
+
+    private fun loadRecipes(query: String = "beef") {
         viewModelScope.launch {
             isLoading = true
             errorMessage = null
@@ -46,16 +169,6 @@ class RecipeViewModel: ViewModel() {
             } finally {
                 isLoading = false
             }
-        }
-    }
-
-    fun onSearchQueryChange(query: String) {
-        searchQuery = query
-    }
-
-    fun performSearch() {
-        if (searchQuery.isNotEmpty()) {
-            loadRecipes(searchQuery)
         }
     }
 
@@ -83,5 +196,59 @@ class RecipeViewModel: ViewModel() {
                 detailIsLoading = false
             }
         }
+    }
+
+    fun loadRecipesByCategory(category: String) {
+        selectedCategory = category
+        viewModelScope.launch {
+            isLoading = true
+            errorMessage = null
+            try {
+                browseCategoryResults = repository.getMealsByCategory(category)
+            } catch (e: Exception) {
+                errorMessage = e.message
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    fun loadRecipesByArea(area: String) {
+        selectedArea = area
+        viewModelScope.launch {
+            isLoading = true
+            errorMessage = null
+            try {
+                browseAreaResults = repository.getMealsByArea(area)
+            } catch (e: Exception) {
+                errorMessage = e.message
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    fun loadRecipesByFirstLetter(letter: String) {
+        selectedLetter = letter
+        viewModelScope.launch {
+            isLoading = true
+            errorMessage = null
+            try {
+                browseByLetterResults = repository.getMealsByFirstLetter(letter)
+            } catch (e: Exception) {
+                errorMessage = e.message
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    fun clearBrowseResults() {
+        browseByLetterResults = emptyList()
+        browseCategoryResults = emptyList()
+        browseAreaResults = emptyList()
+        selectedLetter = ""
+        selectedCategory = ""
+        selectedArea = ""
     }
 }
