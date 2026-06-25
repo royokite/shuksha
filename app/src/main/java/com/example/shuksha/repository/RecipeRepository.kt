@@ -6,6 +6,10 @@ import com.example.shuksha.network.RetrofitInstance
 class RecipeRepository {
 
     suspend fun searchRecipes(query: String): List<Meal> {
-        return RetrofitInstance.api.searchMeals(query).meals
+        return RetrofitInstance.api.searchMeals(query).meals ?: emptyList()
+    }
+
+    suspend fun getMealDetails(mealId: String): List<Meal> {
+        return RetrofitInstance.api.getMealDetails(mealId).meals ?: emptyList()
     }
 }
