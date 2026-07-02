@@ -94,13 +94,18 @@ class RecipeViewModel: ViewModel() {
 
     private fun initialLoad() {
         viewModelScope.launch {
-            coroutineScope {
-                val latestTask = async { loadLatestMeals() }
-                val categoriesTask = async { loadCategoriesAndAreas() }
-                latestTask.await()
-                categoriesTask.await()
+            try {
+                coroutineScope {
+                    val latestTask = async { loadLatestMeals() }
+                    val categoriesTask = async { loadCategoriesAndAreas() }
+                    latestTask.await()
+                    categoriesTask.await()
+                }
+            } catch (e: Exception) {
+                errorMessage = e.message
+            } finally {
+                isReady = true
             }
-            isReady = true
         }
     }
 
@@ -110,11 +115,11 @@ class RecipeViewModel: ViewModel() {
             NavItem.HOME -> if (latestMeals.isEmpty()) viewModelScope.launch { loadLatestMeals() }
             NavItem.EXPLORE -> if (randomMeals.isEmpty()) loadRandomMeal()
             NavItem.SEARCH -> {}
-            NavItem.BROWSE -> if (categories.isEmpty()) viewModelScope.launch {loadCategoriesAndAreas()}
+            NavItem.BROWSE -> if (categories.isEmpty()) viewModelScope.launch { loadCategoriesAndAreas() }
         }
     }
 
-    private suspend fun loadLatestMeals() {
+    suspend fun loadLatestMeals() {
         isLoading = true
         errorMessage = null
         try {
@@ -126,7 +131,7 @@ class RecipeViewModel: ViewModel() {
         }
     }
 
-    private fun loadRandomMeal() {
+    fun loadRandomMeal() {
         viewModelScope.launch {
             isLoading = true
             errorMessage = null
@@ -141,7 +146,7 @@ class RecipeViewModel: ViewModel() {
         }
     }
 
-    private suspend fun loadCategoriesAndAreas() {
+    suspend fun loadCategoriesAndAreas() {
         try {
             isLoadingCategories = true
             categories = repository.getCategoryList()

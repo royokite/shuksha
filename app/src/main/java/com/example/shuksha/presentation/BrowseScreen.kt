@@ -1,6 +1,5 @@
 package com.example.shuksha.presentation
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,7 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -58,102 +57,108 @@ fun BrowseScreen(
 
     val alphabet = ('A'..'Z').map { it.toString() }
 
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .statusBarsPadding()
     ) {
-        // Title
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            Text(
-                text = "Browse Recipes",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 24.sp,
-                modifier = Modifier.padding(bottom = 20.dp)
-            )
-        }
-
-        // Categories Section Header
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            CollapsibleHeader(
-                title = "By Category",
-                isExpanded = categoriesExpanded,
-                onToggle = { categoriesExpanded = !categoriesExpanded }
-            )
-        }
-
-        if (categoriesExpanded) {
-            if (isLoadingCategories) {
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    LoadingIndicator()
-                }
-            } else if (errorMessage != null) {
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    ErrorText(message = "Error loading categories")
-                }
-            } else {
-                items(categories) { category ->
-                    BrowseItem(
-                        text = category.strCategory,
-                        onClick = { onCategoryClick(category.strCategory) }
-                    )
-                }
-            }
-        }
-
-        // Cuisine Section Header
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            Spacer(modifier = Modifier.height(16.dp))
-            CollapsibleHeader(
-                title = "By Cuisine",
-                isExpanded = cuisineExpanded,
-                onToggle = { cuisineExpanded = !cuisineExpanded }
-            )
-        }
-
-        if (cuisineExpanded) {
-            if (isLoadingAreas) {
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    LoadingIndicator()
-                }
-            } else {
-                items(areas) { area ->
-                    BrowseItem(
-                        text = area.strArea,
-                        onClick = { onAreaClick(area.strArea) }
-                    )
-                }
-            }
-        }
-
-        // Letter Section Header
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            Spacer(modifier = Modifier.height(16.dp))
-            CollapsibleHeader(
-                title = "By First Letter",
-                isExpanded = lettersExpanded,
-                onToggle = { lettersExpanded = !lettersExpanded }
-            )
-        }
-
-        if (lettersExpanded) {
-            items(alphabet) { letter ->
-                BrowseItem(
-                    text = letter,
-                    onClick = { onLetterClick(letter) }
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Title
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Text(
+                    text = "Browse Recipes",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontSize = 24.sp,
+                    modifier = Modifier.padding(vertical = 16.dp)
                 )
             }
-        }
 
-        // Bottom spacing
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            Spacer(modifier = Modifier.height(32.dp))
+            // Categories Section Header
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                CollapsibleHeader(
+                    title = "By Category",
+                    isExpanded = categoriesExpanded,
+                    onToggle = { categoriesExpanded = !categoriesExpanded }
+                )
+            }
+
+            if (categoriesExpanded) {
+                if (isLoadingCategories) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        LoadingIndicator()
+                    }
+                } else if (errorMessage != null) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        ErrorText(message = "Error loading categories")
+                    }
+                } else {
+                    items(categories) { category ->
+                        BrowseItem(
+                            text = category.strCategory,
+                            onClick = { onCategoryClick(category.strCategory) }
+                        )
+                    }
+                }
+            }
+
+            // Cuisine Section Header
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Spacer(modifier = Modifier.height(8.dp))
+                CollapsibleHeader(
+                    title = "By Cuisine",
+                    isExpanded = cuisineExpanded,
+                    onToggle = { cuisineExpanded = !cuisineExpanded }
+                )
+            }
+
+            if (cuisineExpanded) {
+                if (isLoadingAreas) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        LoadingIndicator()
+                    }
+                } else {
+                    items(areas) { area ->
+                        BrowseItem(
+                            text = area.strArea,
+                            onClick = { onAreaClick(area.strArea) }
+                        )
+                    }
+                }
+            }
+
+            // Letter Section Header
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Spacer(modifier = Modifier.height(8.dp))
+                CollapsibleHeader(
+                    title = "By First Letter",
+                    isExpanded = lettersExpanded,
+                    onToggle = { lettersExpanded = !lettersExpanded }
+                )
+            }
+
+            if (lettersExpanded) {
+                items(alphabet) { letter ->
+                    BrowseItem(
+                        text = letter,
+                        onClick = { onLetterClick(letter) }
+                    )
+                }
+            }
+
+            // Bottom spacing
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
     }
 }
@@ -164,7 +169,7 @@ fun CollapsibleHeader(title: String, isExpanded: Boolean, onToggle: () -> Unit) 
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onToggle() }
-            .padding(vertical = 8.dp),
+            .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {

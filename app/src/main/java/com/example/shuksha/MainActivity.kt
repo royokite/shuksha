@@ -3,9 +3,12 @@ package com.example.shuksha
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -24,22 +27,38 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         setContent {
             ShukshaTheme {
                 val vm: RecipeViewModel = viewModel()
 
-                // Keep the splash screen on screen until the ViewModel is ready
                 splashScreen.setKeepOnScreenCondition {
                     !vm.isReady
                 }
 
-                Column(modifier = Modifier.fillMaxSize()) {
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    containerColor = MaterialTheme.colorScheme.background,
+                    bottomBar = {
+                        BottomNavBar(
+                            currentItem = vm.currentNavItem,
+                            onItemSelected = { 
+                                // Dismiss any open detail screen or drill-down when navigating
+                                vm.clearSelection() 
+                                vm.clearBrowseResults()
+                                vm.navigateTo(it) 
+                            }
+                        )
+                    }
+                ) { innerPadding ->
+                    // bottom padding to avoid double-padding at the top
                     Box(
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = innerPadding.calculateBottomPadding())
                     ) {
-                        // Show detail screen if a meal is selected
                         if (vm.selectedMeal != null) {
                             RecipeDetailScreen(
                                 meal = vm.selectedMeal,
@@ -48,7 +67,6 @@ class MainActivity : ComponentActivity() {
                                 onBackClick = { vm.clearSelection() }
                             )
                         } else {
-                            // Show navigation-based screens
                             when (vm.currentNavItem) {
                                 NavItem.HOME -> {
                                     HomeScreen(
@@ -65,7 +83,7 @@ class MainActivity : ComponentActivity() {
                                         isLoading = vm.isLoading,
                                         errorMessage = vm.errorMessage,
                                         onMealClick = { vm.selectMeal(it) },
-                                        onLoadMore = { vm.navigateTo(NavItem.EXPLORE) }
+                                        onLoadMore = { vm.loadRandomMeal() }
                                     )
                                 }
 
@@ -131,15 +149,6 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
-
-                    // Bottom Navigation Bar
-                    BottomNavBar(
-                        currentItem = vm.currentNavItem,
-                        onItemSelected = { 
-                            vm.clearBrowseResults()
-                            vm.navigateTo(it) 
-                        }
-                    )
                 }
             }
         }
