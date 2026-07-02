@@ -35,6 +35,26 @@ data class Meal(
     val strIngredient9: String? = null,
     @SerializedName("strIngredient10")
     val strIngredient10: String? = null,
+    @SerializedName("strIngredient11")
+    val strIngredient11: String? = null,
+    @SerializedName("strIngredient12")
+    val strIngredient12: String? = null,
+    @SerializedName("strIngredient13")
+    val strIngredient13: String? = null,
+    @SerializedName("strIngredient14")
+    val strIngredient14: String? = null,
+    @SerializedName("strIngredient15")
+    val strIngredient15: String? = null,
+    @SerializedName("strIngredient16")
+    val strIngredient16: String? = null,
+    @SerializedName("strIngredient17")
+    val strIngredient17: String? = null,
+    @SerializedName("strIngredient18")
+    val strIngredient18: String? = null,
+    @SerializedName("strIngredient19")
+    val strIngredient19: String? = null,
+    @SerializedName("strIngredient20")
+    val strIngredient20: String? = null,
     @SerializedName("strMeasure1")
     val strMeasure1: String? = null,
     @SerializedName("strMeasure2")
@@ -54,7 +74,39 @@ data class Meal(
     @SerializedName("strMeasure9")
     val strMeasure9: String? = null,
     @SerializedName("strMeasure10")
-    val strMeasure10: String? = null
+    val strMeasure10: String? = null,
+    @SerializedName("strMeasure11")
+    val strMeasure11: String? = null,
+    @SerializedName("strMeasure12")
+    val strMeasure12: String? = null,
+    @SerializedName("strMeasure13")
+    val strMeasure13: String? = null,
+    @SerializedName("strMeasure14")
+    val strMeasure14: String? = null,
+    @SerializedName("strMeasure15")
+    val strMeasure15: String? = null,
+    @SerializedName("strMeasure16")
+    val strMeasure16: String? = null,
+    @SerializedName("strMeasure17")
+    val strMeasure17: String? = null,
+    @SerializedName("strMeasure18")
+    val strMeasure18: String? = null,
+    @SerializedName("strMeasure19")
+    val strMeasure19: String? = null,
+    @SerializedName("strMeasure20")
+    val strMeasure20: String? = null,
+    @SerializedName("strTags")
+    val strTags: String? = null,
+    @SerializedName("strYoutube")
+    val strYoutube: String? = null,
+    @SerializedName("strSource")
+    val strSource: String? = null,
+    @SerializedName("strImageSource")
+    val strImageSource: String? = null,
+    @SerializedName("strCreativeCommonsConfirmed")
+    val strCreativeCommonsConfirmed: String? = null,
+    @SerializedName("dateModified")
+    val dateModified: String? = null
 ) {
     fun getIngredientsList(): List<Pair<String, String>> {
         return listOfNotNull(
@@ -67,7 +119,17 @@ data class Meal(
             if (!strIngredient7.isNullOrEmpty()) strIngredient7 to (strMeasure7 ?: "") else null,
             if (!strIngredient8.isNullOrEmpty()) strIngredient8 to (strMeasure8 ?: "") else null,
             if (!strIngredient9.isNullOrEmpty()) strIngredient9 to (strMeasure9 ?: "") else null,
-            if (!strIngredient10.isNullOrEmpty()) strIngredient10 to (strMeasure10 ?: "") else null
+            if (!strIngredient10.isNullOrEmpty()) strIngredient10 to (strMeasure10 ?: "") else null,
+            if (!strIngredient11.isNullOrEmpty()) strIngredient11 to (strMeasure11 ?: "") else null,
+            if (!strIngredient12.isNullOrEmpty()) strIngredient12 to (strMeasure12 ?: "") else null,
+            if (!strIngredient13.isNullOrEmpty()) strIngredient13 to (strMeasure13 ?: "") else null,
+            if (!strIngredient14.isNullOrEmpty()) strIngredient14 to (strMeasure14 ?: "") else null,
+            if (!strIngredient15.isNullOrEmpty()) strIngredient15 to (strMeasure15 ?: "") else null,
+            if (!strIngredient16.isNullOrEmpty()) strIngredient16 to (strMeasure16 ?: "") else null,
+            if (!strIngredient17.isNullOrEmpty()) strIngredient17 to (strMeasure17 ?: "") else null,
+            if (!strIngredient18.isNullOrEmpty()) strIngredient18 to (strMeasure18 ?: "") else null,
+            if (!strIngredient19.isNullOrEmpty()) strIngredient19 to (strMeasure19 ?: "") else null,
+            if (!strIngredient20.isNullOrEmpty()) strIngredient20 to (strMeasure20 ?: "") else null
         )
     }
 }

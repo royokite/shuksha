@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -17,6 +19,7 @@ import com.example.shuksha.presentation.BrowseByLetterResultsScreen
 import com.example.shuksha.presentation.BrowseScreen
 import com.example.shuksha.presentation.BottomNavBar
 import com.example.shuksha.presentation.ExploreScreen
+import com.example.shuksha.presentation.FavoritesScreen
 import com.example.shuksha.presentation.HomeScreen
 import com.example.shuksha.presentation.RecipeDetailScreen
 import com.example.shuksha.presentation.RecipeScreen
@@ -33,6 +36,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             ShukshaTheme {
                 val vm: RecipeViewModel = viewModel()
+                val favoriteIds by vm.favoriteIds.collectAsState()
+                val favoriteMeals by vm.favorites.collectAsState()
 
                 splashScreen.setKeepOnScreenCondition {
                     !vm.isReady
@@ -45,7 +50,6 @@ class MainActivity : ComponentActivity() {
                         BottomNavBar(
                             currentItem = vm.currentNavItem,
                             onItemSelected = { 
-                                // Dismiss any open detail screen or drill-down when navigating
                                 vm.clearSelection() 
                                 vm.clearBrowseResults()
                                 vm.navigateTo(it) 
@@ -53,7 +57,6 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 ) { innerPadding ->
-                    // bottom padding to avoid double-padding at the top
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -73,6 +76,8 @@ class MainActivity : ComponentActivity() {
                                         latestMeals = vm.latestMeals,
                                         isLoading = vm.isLoading,
                                         errorMessage = vm.errorMessage,
+                                        favoriteIds = favoriteIds,
+                                        onFavoriteClick = { vm.toggleFavorite(it) },
                                         onMealClick = { vm.selectMeal(it) }
                                     )
                                 }
@@ -82,6 +87,8 @@ class MainActivity : ComponentActivity() {
                                         randomMeals = vm.randomMeals,
                                         isLoading = vm.isLoading,
                                         errorMessage = vm.errorMessage,
+                                        favoriteIds = favoriteIds,
+                                        onFavoriteClick = { vm.toggleFavorite(it) },
                                         onMealClick = { vm.selectMeal(it) },
                                         onLoadMore = { vm.loadRandomMeal() }
                                     )
@@ -95,6 +102,8 @@ class MainActivity : ComponentActivity() {
                                         searchQuery = vm.searchQuery,
                                         onSearchQueryChange = { vm.onSearchQueryChange(it) },
                                         onSearchSubmit = { vm.performSearch() },
+                                        favoriteIds = favoriteIds,
+                                        onFavoriteClick = { vm.toggleFavorite(it) },
                                         onMealClick = { vm.selectMeal(it) }
                                     )
                                 }
@@ -107,7 +116,9 @@ class MainActivity : ComponentActivity() {
                                             errorMessage = vm.errorMessage,
                                             selectedLetter = vm.selectedLetter,
                                             onMealClick = { vm.selectMeal(it) },
-                                            onBackClick = { vm.clearBrowseResults() }
+                                            onBackClick = { vm.clearBrowseResults() },
+                                            favoriteIds = favoriteIds,
+                                            onFavoriteClick = { vm.toggleFavorite(it) },
                                         )
                                     } else if (vm.selectedCategory.isNotEmpty()) {
                                         RecipeScreen(
@@ -117,6 +128,8 @@ class MainActivity : ComponentActivity() {
                                             searchQuery = vm.selectedCategory,
                                             onSearchQueryChange = {},
                                             onSearchSubmit = {},
+                                            favoriteIds = favoriteIds,
+                                            onFavoriteClick = { vm.toggleFavorite(it) },
                                             onMealClick = { vm.selectMeal(it) },
                                             showBackButton = true,
                                             onBackClick = { vm.clearBrowseResults() }
@@ -129,6 +142,8 @@ class MainActivity : ComponentActivity() {
                                             searchQuery = vm.selectedArea,
                                             onSearchQueryChange = {},
                                             onSearchSubmit = {},
+                                            favoriteIds = favoriteIds,
+                                            onFavoriteClick = { vm.toggleFavorite(it) },
                                             onMealClick = { vm.selectMeal(it) },
                                             showBackButton = true,
                                             onBackClick = { vm.clearBrowseResults() }
@@ -145,6 +160,14 @@ class MainActivity : ComponentActivity() {
                                             onLetterClick = { vm.loadRecipesByFirstLetter(it) }
                                         )
                                     }
+                                }
+
+                                NavItem.FAVORITES -> {
+                                    FavoritesScreen(
+                                        favoriteMeals = favoriteMeals,
+                                        onFavoriteClick = { vm.toggleFavorite(it) },
+                                        onMealClick = { vm.selectMeal(it) }
+                                    )
                                 }
                             }
                         }
