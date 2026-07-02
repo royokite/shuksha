@@ -1,28 +1,17 @@
 package com.example.shuksha.presentation
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.shuksha.data.Meal
 
@@ -34,6 +23,8 @@ fun RecipeScreen(
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
     onSearchSubmit: () -> Unit,
+    favoriteIds: Set<String>,
+    onFavoriteClick: (Meal) -> Unit,
     onMealClick: (Meal) -> Unit,
     showBackButton: Boolean = false,
     onBackClick: () -> Unit = {}
@@ -42,7 +33,6 @@ fun RecipeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .statusBarsPadding()
     ) {
         if (showBackButton) {
             Row(
@@ -53,7 +43,7 @@ fun RecipeScreen(
             ) {
                 IconButton(onClick = onBackClick) {
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
                         tint = MaterialTheme.colorScheme.primary
                     )
@@ -92,7 +82,6 @@ fun RecipeScreen(
                                 text = errorMessage,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(16.dp)
                             )
                         }
@@ -103,7 +92,6 @@ fun RecipeScreen(
                         Text(
                             text = if (showBackButton) "No recipes found" else "Search for available recipes!",
                             style = MaterialTheme.typography.headlineSmall,
-                            textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -118,7 +106,12 @@ fun RecipeScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(meals) { meal ->
-                            RecipeCard(meal) { onMealClick(meal) }
+                            RecipeCard(
+                                meal = meal,
+                                isFavorite = favoriteIds.contains(meal.idMeal),
+                                onFavoriteClick = onFavoriteClick,
+                                onClick = { onMealClick(meal) }
+                            )
                         }
                     }
                 }

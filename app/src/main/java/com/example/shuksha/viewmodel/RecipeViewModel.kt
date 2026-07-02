@@ -1,6 +1,7 @@
 package com.example.shuksha.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
@@ -9,14 +10,21 @@ import androidx.compose.runtime.setValue
 import com.example.shuksha.data.Meal
 import com.example.shuksha.data.AreaItem
 import com.example.shuksha.data.CategoryItem
+import com.example.shuksha.data.FavoriteMeal
+import com.example.shuksha.data.AppDatabase
 import com.example.shuksha.navigation.NavItem
 import com.example.shuksha.repository.RecipeRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
-class RecipeViewModel: ViewModel() {
+class RecipeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = RecipeRepository()
+    private val favoriteDao = AppDatabase.getDatabase(application).favoriteMealDao()
 
     var isReady by mutableStateOf(false)
         private set
@@ -69,7 +77,7 @@ class RecipeViewModel: ViewModel() {
     var isLoadingAreas by mutableStateOf(false)
         private set
 
-    // Browse by letter
+    // Browse drill-down state
     var browseByLetterResults by mutableStateOf<List<Meal>>(emptyList())
         private set
 
@@ -88,6 +96,13 @@ class RecipeViewModel: ViewModel() {
     var selectedArea by mutableStateOf("")
         private set
 
+    // Favorites
+    val favorites: StateFlow<List<FavoriteMeal>> = favoriteDao.getAllFavorites()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val favoriteIds: StateFlow<Set<String>> = favorites.map { list -> list.map { it.idMeal }.toSet() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
+
     init {
         initialLoad()
     }
@@ -96,8 +111,8 @@ class RecipeViewModel: ViewModel() {
         viewModelScope.launch {
             try {
                 coroutineScope {
-                    val latestTask = async { loadLatestMeals() }
-                    val categoriesTask = async { loadCategoriesAndAreas() }
+                    val latestTask = async { loadLatestMealsInternal() }
+                    val categoriesTask = async { loadCategoriesAndAreasInternal() }
                     latestTask.await()
                     categoriesTask.await()
                 }
@@ -112,14 +127,23 @@ class RecipeViewModel: ViewModel() {
     fun navigateTo(item: NavItem) {
         currentNavItem = item
         when (item) {
-            NavItem.HOME -> if (latestMeals.isEmpty()) viewModelScope.launch { loadLatestMeals() }
-            NavItem.EXPLORE -> if (randomMeals.isEmpty()) loadRandomMeal()
+            NavItem.HOME -> if (latestMeals.isEmpty() && !isLoading) {
+                viewModelScope.launch { loadLatestMealsInternal() }
+            }
+            NavItem.EXPLORE -> if (randomMeals.isEmpty() && !isLoading) {
+                loadRandomMeal()
+            }
             NavItem.SEARCH -> {}
-            NavItem.BROWSE -> if (categories.isEmpty()) viewModelScope.launch { loadCategoriesAndAreas() }
+            NavItem.BROWSE -> if (categories.isEmpty() && !isLoadingCategories) {
+                viewModelScope.launch { loadCategoriesAndAreasInternal() }
+            }
+
+            NavItem.FAVORITES -> {}
         }
     }
 
-    suspend fun loadLatestMeals() {
+    private suspend fun loadLatestMealsInternal() {
+        if (isLoading) return
         isLoading = true
         errorMessage = null
         try {
@@ -132,6 +156,7 @@ class RecipeViewModel: ViewModel() {
     }
 
     fun loadRandomMeal() {
+        if (isLoading) return
         viewModelScope.launch {
             isLoading = true
             errorMessage = null
@@ -146,7 +171,8 @@ class RecipeViewModel: ViewModel() {
         }
     }
 
-    suspend fun loadCategoriesAndAreas() {
+    private suspend fun loadCategoriesAndAreasInternal() {
+        if (isLoadingCategories) return
         try {
             isLoadingCategories = true
             categories = repository.getCategoryList()
@@ -178,7 +204,6 @@ class RecipeViewModel: ViewModel() {
         viewModelScope.launch {
             isLoading = true
             errorMessage = null
-
             try {
                 meals = repository.searchRecipes(query)
             } catch (e: Exception) {
@@ -203,7 +228,6 @@ class RecipeViewModel: ViewModel() {
         viewModelScope.launch {
             detailIsLoading = true
             detailErrorMessage = null
-
             try {
                 val response = repository.getMealDetails(mealId)
                 selectedMeal = response.firstOrNull() ?: selectedMeal
@@ -211,6 +235,24 @@ class RecipeViewModel: ViewModel() {
                 detailErrorMessage = e.message
             } finally {
                 detailIsLoading = false
+            }
+        }
+    }
+
+    fun toggleFavorite(meal: Meal) {
+        viewModelScope.launch {
+            val isFav = favoriteDao.isFavorite(meal.idMeal)
+            val favMeal = FavoriteMeal(
+                idMeal = meal.idMeal,
+                strMeal = meal.strMeal,
+                strMealThumb = meal.strMealThumb,
+                strCategory = meal.strCategory,
+                strArea = meal.strArea
+            )
+            if (isFav) {
+                favoriteDao.deleteFavorite(favMeal)
+            } else {
+                favoriteDao.insertFavorite(favMeal)
             }
         }
     }

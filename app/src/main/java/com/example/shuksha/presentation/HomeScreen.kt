@@ -25,6 +25,8 @@ fun HomeScreen(
     latestMeals: List<Meal>,
     isLoading: Boolean,
     errorMessage: String?,
+    favoriteIds: Set<String>,
+    onFavoriteClick: (Meal) -> Unit,
     onMealClick: (Meal) -> Unit
 ) {
     Box(
@@ -68,12 +70,15 @@ fun HomeScreen(
                 }
 
                 items(latestMeals.size) { index ->
-                    RecipeCard(latestMeals[index]) {
-                        onMealClick(latestMeals[index])
-                    }
+                    val meal = latestMeals[index]
+                    RecipeCard(
+                        meal = meal,
+                        isFavorite = favoriteIds.contains(meal.idMeal),
+                        onFavoriteClick = onFavoriteClick,
+                        onClick = { onMealClick(meal) }
+                    )
                 }
                 
-                // Add bottom padding to the list
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     Box(modifier = Modifier.padding(bottom = 16.dp))
                 }
