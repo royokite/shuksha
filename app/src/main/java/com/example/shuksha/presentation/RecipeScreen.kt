@@ -4,9 +4,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
@@ -14,7 +16,11 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,26 +32,51 @@ import com.example.shuksha.data.Meal
 
 @Composable
 fun RecipeScreen(
-        meals: List<Meal>,
-        isLoading: Boolean,
-        errorMessage: String?,
-        searchQuery: String,
-        onSearchQueryChange: (String) -> Unit,
-        onSearchSubmit: () -> Unit,
-        onMealClick: (Meal) -> Unit
+    meals: List<Meal>,
+    isLoading: Boolean,
+    errorMessage: String?,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    onSearchSubmit: () -> Unit,
+    onMealClick: (Meal) -> Unit,
+    showBackButton: Boolean = false,
+    onBackClick: () -> Unit = {}
 ) {
 
     Column(
-            modifier =
-                    Modifier.fillMaxSize()
-                        .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top))
-                        .background(MaterialTheme.colorScheme.background)
+        modifier = Modifier
+            .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top))
+            .background(MaterialTheme.colorScheme.background)
     ) {
-        SearchBar(
+        if (showBackButton) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBackClick) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                Text(
+                    text = searchQuery,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+        } else {
+            SearchBar(
                 query = searchQuery,
                 onQueryChange = onSearchQueryChange,
                 onSearch = onSearchSubmit
-        )
+            )
+        }
 
         Box(modifier = Modifier.fillMaxSize()) {
             when {
@@ -58,37 +89,41 @@ fun RecipeScreen(
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                    text = "Error loading recipes",
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    color = MaterialTheme.colorScheme.error
+                                text = "Error loading recipes",
+                                style = MaterialTheme.typography.headlineSmall,
+                                color = MaterialTheme.colorScheme.error
                             )
                             Text(
-                                    text = errorMessage,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.padding(16.dp)
+                                text = errorMessage,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(16.dp)
                             )
                         }
                     }
                 }
-                meals.isEmpty() -> {
+                meals.isEmpty() && !isLoading -> {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
-                                text = "Search for available recipes!",
-                                style = MaterialTheme.typography.headlineSmall,
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            text = if (showBackButton) "No recipes found" else "Search for available recipes!",
+                            style = MaterialTheme.typography.headlineSmall,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
                 else -> {
                     LazyVerticalGrid(
-                            columns = GridCells.Fixed(2),
-                            modifier = Modifier.padding(8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) { items(meals) { meal -> RecipeCard(meal) { onMealClick(meal) } } }
+                        columns = GridCells.Fixed(2),
+                        modifier = Modifier.padding(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(meals) { meal ->
+                            RecipeCard(meal) { onMealClick(meal) }
+                        }
+                    }
                 }
             }
         }

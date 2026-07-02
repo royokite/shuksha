@@ -11,10 +11,15 @@ import com.example.shuksha.data.AreaItem
 import com.example.shuksha.data.CategoryItem
 import com.example.shuksha.navigation.NavItem
 import com.example.shuksha.repository.RecipeRepository
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 
 class RecipeViewModel: ViewModel() {
 
     private val repository = RecipeRepository()
+
+    var isReady by mutableStateOf(false)
+        private set
 
     // Navigation
     var currentNavItem by mutableStateOf(NavItem.HOME)
@@ -84,31 +89,40 @@ class RecipeViewModel: ViewModel() {
         private set
 
     init {
-        loadLatestMeals()
-        loadCategoriesAndAreas()
+        initialLoad()
+    }
+
+    private fun initialLoad() {
+        viewModelScope.launch {
+            coroutineScope {
+                val latestTask = async { loadLatestMeals() }
+                val categoriesTask = async { loadCategoriesAndAreas() }
+                latestTask.await()
+                categoriesTask.await()
+            }
+            isReady = true
+        }
     }
 
     fun navigateTo(item: NavItem) {
         currentNavItem = item
         when (item) {
-            NavItem.HOME -> loadLatestMeals()
-            NavItem.EXPLORE -> loadRandomMeal()
+            NavItem.HOME -> if (latestMeals.isEmpty()) viewModelScope.launch { loadLatestMeals() }
+            NavItem.EXPLORE -> if (randomMeals.isEmpty()) loadRandomMeal()
             NavItem.SEARCH -> {}
-            NavItem.BROWSE -> {}
+            NavItem.BROWSE -> if (categories.isEmpty()) viewModelScope.launch {loadCategoriesAndAreas()}
         }
     }
 
-    private fun loadLatestMeals() {
-        viewModelScope.launch {
-            isLoading = true
-            errorMessage = null
-            try {
-                latestMeals = repository.searchRecipes("a")
-            } catch (e: Exception) {
-                errorMessage = e.message
-            } finally {
-                isLoading = false
-            }
+    private suspend fun loadLatestMeals() {
+        isLoading = true
+        errorMessage = null
+        try {
+            latestMeals = repository.searchRecipes("a")
+        } catch (e: Exception) {
+            errorMessage = e.message
+        } finally {
+            isLoading = false
         }
     }
 
@@ -127,25 +141,23 @@ class RecipeViewModel: ViewModel() {
         }
     }
 
-    private fun loadCategoriesAndAreas() {
-        viewModelScope.launch {
-            try {
-                isLoadingCategories = true
-                categories = repository.getCategoryList()
-            } catch (e: Exception) {
-                errorMessage = e.message
-            } finally {
-                isLoadingCategories = false
-            }
+    private suspend fun loadCategoriesAndAreas() {
+        try {
+            isLoadingCategories = true
+            categories = repository.getCategoryList()
+        } catch (e: Exception) {
+            errorMessage = e.message
+        } finally {
+            isLoadingCategories = false
+        }
 
-            try {
-                isLoadingAreas = true
-                areas = repository.getAreaList()
-            } catch (e: Exception) {
-                errorMessage = e.message
-            } finally {
-                isLoadingAreas = false
-            }
+        try {
+            isLoadingAreas = true
+            areas = repository.getAreaList()
+        } catch (e: Exception) {
+            errorMessage = e.message
+        } finally {
+            isLoadingAreas = false
         }
     }
 

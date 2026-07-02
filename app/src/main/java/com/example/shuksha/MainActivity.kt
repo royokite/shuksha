@@ -6,6 +6,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.shuksha.navigation.NavItem
 import com.example.shuksha.presentation.BrowseByLetterResultsScreen
@@ -20,18 +22,22 @@ import com.example.shuksha.viewmodel.RecipeViewModel
 
 class MainActivity : ComponentActivity() {
 
-    override fun onCreate(
-        savedInstanceState: Bundle?
-    ) {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
 
         setContent {
             ShukshaTheme {
                 val vm: RecipeViewModel = viewModel()
 
-                Column(modifier = androidx.compose.ui.Modifier.fillMaxSize()) {
+                // Keep the splash screen on screen until the ViewModel is ready
+                splashScreen.setKeepOnScreenCondition {
+                    !vm.isReady
+                }
+
+                Column(modifier = Modifier.fillMaxSize()) {
                     Box(
-                        modifier = androidx.compose.ui.Modifier.weight(1f)
+                        modifier = Modifier.weight(1f)
                     ) {
                         // Show detail screen if a meal is selected
                         if (vm.selectedMeal != null) {
@@ -76,7 +82,7 @@ class MainActivity : ComponentActivity() {
                                 }
 
                                 NavItem.BROWSE -> {
-                                    if (vm.browseByLetterResults.isNotEmpty()) {
+                                    if (vm.browseByLetterResults.isNotEmpty() || vm.selectedLetter.isNotEmpty()) {
                                         BrowseByLetterResultsScreen(
                                             meals = vm.browseByLetterResults,
                                             isLoading = vm.isLoading,
@@ -85,7 +91,7 @@ class MainActivity : ComponentActivity() {
                                             onMealClick = { vm.selectMeal(it) },
                                             onBackClick = { vm.clearBrowseResults() }
                                         )
-                                    } else if (vm.browseCategoryResults.isNotEmpty()) {
+                                    } else if (vm.selectedCategory.isNotEmpty()) {
                                         RecipeScreen(
                                             meals = vm.browseCategoryResults,
                                             isLoading = vm.isLoading,
@@ -93,9 +99,11 @@ class MainActivity : ComponentActivity() {
                                             searchQuery = vm.selectedCategory,
                                             onSearchQueryChange = {},
                                             onSearchSubmit = {},
-                                            onMealClick = { vm.selectMeal(it) }
+                                            onMealClick = { vm.selectMeal(it) },
+                                            showBackButton = true,
+                                            onBackClick = { vm.clearBrowseResults() }
                                         )
-                                    } else if (vm.browseAreaResults.isNotEmpty()) {
+                                    } else if (vm.selectedArea.isNotEmpty()) {
                                         RecipeScreen(
                                             meals = vm.browseAreaResults,
                                             isLoading = vm.isLoading,
@@ -103,7 +111,9 @@ class MainActivity : ComponentActivity() {
                                             searchQuery = vm.selectedArea,
                                             onSearchQueryChange = {},
                                             onSearchSubmit = {},
-                                            onMealClick = { vm.selectMeal(it) }
+                                            onMealClick = { vm.selectMeal(it) },
+                                            showBackButton = true,
+                                            onBackClick = { vm.clearBrowseResults() }
                                         )
                                     } else {
                                         BrowseScreen(
@@ -113,7 +123,8 @@ class MainActivity : ComponentActivity() {
                                             isLoadingAreas = vm.isLoadingAreas,
                                             errorMessage = vm.errorMessage,
                                             onCategoryClick = { vm.loadRecipesByCategory(it) },
-                                            onAreaClick = { vm.loadRecipesByArea(it) }
+                                            onAreaClick = { vm.loadRecipesByArea(it) },
+                                            onLetterClick = { vm.loadRecipesByFirstLetter(it) }
                                         )
                                     }
                                 }
@@ -124,7 +135,10 @@ class MainActivity : ComponentActivity() {
                     // Bottom Navigation Bar
                     BottomNavBar(
                         currentItem = vm.currentNavItem,
-                        onItemSelected = { vm.navigateTo(it) }
+                        onItemSelected = { 
+                            vm.clearBrowseResults()
+                            vm.navigateTo(it) 
+                        }
                     )
                 }
             }
