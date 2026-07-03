@@ -8,27 +8,27 @@ import com.example.shuksha.network.RetrofitInstance
 class RecipeRepository {
 
     suspend fun searchRecipes(query: String): List<Meal> {
-        return RetrofitInstance.api.searchMeals(query).meals
+        return RetrofitInstance.api.searchMeals(query).meals ?: emptyList()
     }
 
     suspend fun getMealDetails(mealId: String): List<Meal> {
-        return RetrofitInstance.api.getMealDetails(mealId).meals
+        return RetrofitInstance.api.getMealDetails(mealId).meals ?: emptyList()
     }
 
     suspend fun getRandomMeal(): List<Meal> {
-        return RetrofitInstance.api.getRandomMeal().meals
+        return RetrofitInstance.api.getRandomMeal().meals ?: emptyList()
     }
 
     suspend fun getMealsByArea(area: String): List<Meal> {
-        return RetrofitInstance.api.getMealsByArea(area).meals
+        return RetrofitInstance.api.getMealsByArea(area).meals ?: emptyList()
     }
 
     suspend fun getMealsByCategory(category: String): List<Meal> {
-        return RetrofitInstance.api.getMealsByCategory(category).meals
+        return RetrofitInstance.api.getMealsByCategory(category).meals ?: emptyList()
     }
 
     suspend fun getMealsByFirstLetter(letter: String): List<Meal> {
-        return RetrofitInstance.api.getMealsByFirstLetter(letter).meals
+        return RetrofitInstance.api.getMealsByFirstLetter(letter).meals ?: emptyList()
     }
 
     suspend fun getAreaList(): List<AreaItem> {

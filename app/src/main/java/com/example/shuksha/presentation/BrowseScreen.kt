@@ -140,7 +140,7 @@ fun BrowseScreen(
 
                 items(chunkedLetters, span = { GridItemSpan(maxLineSpan) }) { rowLetters ->
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         rowLetters.forEach { letter ->
@@ -151,7 +151,6 @@ fun BrowseScreen(
                                 )
                             }
                         }
-                        // fill remaining cells in last row
                         repeat(4 - rowLetters.size) {
                             Spacer(modifier = Modifier.weight(1f))
                         }
@@ -203,6 +202,7 @@ fun getFlagEmoji(area: String): String {
         "american" -> "🇺🇸"
         "british" -> "🇬🇧"
         "canadian" -> "🇨🇦"
+        "chilean" -> "🇨🇱"
         "chinese" -> "🇨🇳"
         "croatian" -> "🇭🇷"
         "dutch" -> "🇳🇱"
