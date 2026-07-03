@@ -32,6 +32,7 @@ fun ExploreScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .statusBarsPadding()
     ) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),

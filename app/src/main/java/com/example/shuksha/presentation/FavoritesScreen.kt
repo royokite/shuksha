@@ -27,6 +27,7 @@ fun FavoritesScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .statusBarsPadding()
     ) {
         if (favoriteMeals.isEmpty()) {
             Box(

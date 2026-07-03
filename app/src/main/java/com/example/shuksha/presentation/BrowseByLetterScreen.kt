@@ -76,7 +76,7 @@ fun BrowseByLetterResultsScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-        } else if (meals.isEmpty() && !isLoading) {
+        } else if (meals.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -104,38 +104,6 @@ fun BrowseByLetterResultsScreen(
                         onClick = { onMealClick(meal) }
                     )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun BrowseByLetterScreen(onLetterSelected: (String) -> Unit) {
-    val alphabet = ('A'..'Z').map { it.toString() }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp)
-            .statusBarsPadding()
-    ) {
-        Text(
-            text = "Browse by Letter",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface,
-            fontSize = 24.sp
-        )
-
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(4),
-            modifier = Modifier.padding(top = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(alphabet) { letter ->
-                BrowseItem(text = letter, onClick = { onLetterSelected(letter) })
             }
         }
     }

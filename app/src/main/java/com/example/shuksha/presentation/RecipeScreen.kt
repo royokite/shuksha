@@ -33,6 +33,7 @@ fun RecipeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .statusBarsPadding()
     ) {
         if (showBackButton) {
             Row(

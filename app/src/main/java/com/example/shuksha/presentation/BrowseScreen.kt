@@ -44,6 +44,7 @@ fun BrowseScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .statusBarsPadding()
     ) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
@@ -135,11 +136,26 @@ fun BrowseScreen(
             }
 
             if (openSection == BrowseSection.LETTERS) {
-                items(alphabet) { letter ->
-                    BrowseItem(
-                        text = letter,
-                        onClick = { onLetterClick(letter) }
-                    )
+                val chunkedLetters = alphabet.chunked(4)
+
+                items(chunkedLetters, span = { GridItemSpan(maxLineSpan) }) { rowLetters ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        rowLetters.forEach { letter ->
+                            Box(modifier = Modifier.weight(1f)) {
+                                BrowseItem(
+                                    text = letter,
+                                    onClick = { onLetterClick(letter) }
+                                )
+                            }
+                        }
+                        // fill remaining cells in last row
+                        repeat(4 - rowLetters.size) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
                 }
             }
 
