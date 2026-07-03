@@ -72,16 +72,15 @@ fun BrowseScreen(
                     title = "By Category",
                     isExpanded = openSection == BrowseSection.CATEGORIES,
                     onToggle = {
-                        openSection = if (openSection == BrowseSection.CATEGORIES) BrowseSection.NONE else BrowseSection.CATEGORIES
+                        openSection =
+                            if (openSection == BrowseSection.CATEGORIES) BrowseSection.NONE else BrowseSection.CATEGORIES
                     }
                 )
             }
 
             if (openSection == BrowseSection.CATEGORIES) {
                 if (isLoadingCategories) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        LoadingIndicator()
-                    }
+                    item(span = { GridItemSpan(maxLineSpan) }) { LoadingIndicator() }
                 } else if (errorMessage != null) {
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         ErrorText(message = "Error loading categories")
@@ -103,7 +102,8 @@ fun BrowseScreen(
                     title = "By Cuisine",
                     isExpanded = openSection == BrowseSection.CUISINE,
                     onToggle = {
-                        openSection = if (openSection == BrowseSection.CUISINE) BrowseSection.NONE else BrowseSection.CUISINE
+                        openSection =
+                            if (openSection == BrowseSection.CUISINE) BrowseSection.NONE else BrowseSection.CUISINE
                     }
                 )
             }
@@ -114,11 +114,14 @@ fun BrowseScreen(
                         LoadingIndicator()
                     }
                 } else {
-                    items(areas.filter { it.strArea.lowercase() != "unknown" }) { area ->
-                        CuisineItem(
-                            area = area.strArea,
-                            onClick = { onAreaClick(area.strArea) }
-                        )
+                    items(
+                        areas.filter {
+                            (it.strCountry?.lowercase()
+                                ?: it.strArea?.lowercase() ?: "") != "unknown"
+                        }
+                    ) { area ->
+                        val countryName = area.strCountry ?: area.strArea ?: "Unknown"
+                        CuisineItem(area = countryName, onClick = { onAreaClick(countryName) })
                     }
                 }
             }
@@ -130,7 +133,9 @@ fun BrowseScreen(
                     title = "By First Letter",
                     isExpanded = openSection == BrowseSection.LETTERS,
                     onToggle = {
-                        openSection = if (openSection == BrowseSection.LETTERS) BrowseSection.NONE else BrowseSection.LETTERS
+                        openSection =
+                            if (openSection == BrowseSection.LETTERS) BrowseSection.NONE
+                            else BrowseSection.LETTERS
                     }
                 )
             }
@@ -140,28 +145,23 @@ fun BrowseScreen(
 
                 items(chunkedLetters, span = { GridItemSpan(maxLineSpan) }) { rowLetters ->
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         rowLetters.forEach { letter ->
                             Box(modifier = Modifier.weight(1f)) {
-                                BrowseItem(
-                                    text = letter,
-                                    onClick = { onLetterClick(letter) }
-                                )
+                                BrowseItem(text = letter, onClick = { onLetterClick(letter) })
                             }
                         }
-                        repeat(4 - rowLetters.size) {
-                            Spacer(modifier = Modifier.weight(1f))
-                        }
+                        repeat(4 - rowLetters.size) { Spacer(modifier = Modifier.weight(1f)) }
                     }
                 }
             }
 
             // Bottom spacing
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                Spacer(modifier = Modifier.height(16.dp))
-            }
+            item(span = { GridItemSpan(maxLineSpan) }) { Spacer(modifier = Modifier.height(16.dp)) }
         }
     }
 }
@@ -173,7 +173,11 @@ fun CuisineItem(area: String, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -198,38 +202,80 @@ fun CuisineItem(area: String, onClick: () -> Unit) {
 }
 
 fun getFlagEmoji(area: String): String {
-    return when (area.lowercase()) {
-        "american" -> "🇺🇸"
-        "british" -> "🇬🇧"
-        "canadian" -> "🇨🇦"
-        "chilean" -> "🇨🇱"
-        "chinese" -> "🇨🇳"
-        "croatian" -> "🇭🇷"
-        "dutch" -> "🇳🇱"
-        "egyptian" -> "🇪🇬"
-        "filipino" -> "🇵🇭"
-        "french" -> "🇫🇷"
-        "greek" -> "🇬🇷"
-        "indian" -> "🇮🇳"
-        "irish" -> "🇮🇪"
-        "italian" -> "🇮🇹"
-        "jamaican" -> "🇯🇲"
-        "japanese" -> "🇯🇵"
-        "kenyan" -> "🇰🇪"
-        "malaysian" -> "🇲🇾"
-        "mexican" -> "🇲🇽"
-        "moroccan" -> "🇲🇦"
-        "polish" -> "🇵🇱"
-        "portuguese" -> "🇵🇹"
-        "russian" -> "🇷🇺"
-        "spanish" -> "🇪🇸"
-        "thai" -> "🇹🇭"
-        "tunisian" -> "🇹🇳"
-        "turkish" -> "🇹🇷"
-        "ukrainian" -> "🇺🇦"
-        "vietnamese" -> "🇻🇳"
-        else -> "🏳️"
-    }
+    val normalized = area.lowercase()
+    
+    // Try direct adjective match first
+    val adjectiveMap = mapOf(
+        "american" to "🇺🇸", "usa" to "🇺🇸", "united states" to "🇺🇸",
+        "australian" to "🇦🇺", "australia" to "🇦🇺",
+        "austrian" to "🇦🇹", "austria" to "🇦🇹",
+        "belgian" to "🇧🇪", "belgium" to "🇧🇪",
+        "brazilian" to "🇧🇷", "brazil" to "🇧🇷",
+        "british" to "🇬🇧", "uk" to "🇬🇧", "united kingdom" to "🇬🇧",
+        "bulgarian" to "🇧🇬", "bulgaria" to "🇧🇬",
+        "cambodian" to "🇰🇭", "cambodia" to "🇰🇭",
+        "canadian" to "🇨🇦", "canada" to "🇨🇦",
+        "chilean" to "🇨🇱", "chile" to "🇨🇱",
+        "chinese" to "🇨🇳", "china" to "🇨🇳",
+        "croatian" to "🇭🇷", "croatia" to "🇭🇷",
+        "cuban" to "🇨🇺", "cuba" to "🇨🇺",
+        "cypriot" to "🇨🇾", "cyprus" to "🇨🇾",
+        "czech" to "🇨🇿", "czechia" to "🇨🇿", "czech republic" to "🇨🇿",
+        "danish" to "🇩🇰", "denmark" to "🇩🇰",
+        "dutch" to "🇳🇱", "netherlands" to "🇳🇱",
+        "ecuadorian" to "🇪🇨", "ecuador" to "🇪🇨",
+        "egyptian" to "🇪🇬", "egypt" to "🇪🇬",
+        "estonian" to "🇪🇪", "estonia" to "🇪🇪",
+        "finnish" to "🇫🇮", "finland" to "🇫🇮",
+        "filipino" to "🇵🇭", "philippines" to "🇵🇭",
+        "french" to "🇫🇷", "france" to "🇫🇷",
+        "german" to "🇩🇪", "germany" to "🇩🇪",
+        "greek" to "🇬🇷", "greece" to "🇬🇷",
+        "hungarian" to "🇭🇺", "hungary" to "🇭🇺",
+        "icelandic" to "🇮🇸", "iceland" to "🇮🇸",
+        "indian" to "🇮🇳", "india" to "🇮🇳",
+        "indonesian" to "🇮🇩", "indonesia" to "🇮🇩",
+        "irish" to "🇮🇪", "ireland" to "🇮🇪",
+        "israeli" to "🇮🇱", "israel" to "🇮🇱",
+        "italian" to "🇮🇹", "italy" to "🇮🇹",
+        "jamaican" to "🇯🇲", "jamaica" to "🇯🇲",
+        "japanese" to "🇯🇵", "japan" to "🇯🇵",
+        "kenyan" to "🇰🇪", "kenya" to "🇰🇪",
+        "korean" to "🇰🇷", "korea" to "🇰🇷", "south korea" to "🇰🇷",
+        "kosovan" to "🇽🇰", "kosovo" to "🇽🇰",
+        "latvian" to "🇱🇻", "latvia" to "🇱🇻",
+        "lithuanian" to "🇱🇹", "lithuania" to "🇱🇹",
+        "luxembourgish" to "🇱🇺", "luxembourg" to "🇱🇺",
+        "macedonian" to "🇲🇰", "north macedonia" to "🇲🇰",
+        "malaysian" to "🇲🇾", "malaysia" to "🇲🇾",
+        "maltese" to "🇲🇹", "malta" to "🇲🇹",
+        "mexican" to "🇲🇽", "mexico" to "🇲🇽",
+        "moldovan" to "🇲🇩", "moldova" to "🇲🇩",
+        "moroccan" to "🇲🇦", "morocco" to "🇲🇦",
+        "norwegian" to "🇳🇴", "norway" to "🇳🇴",
+        "pakistani" to "🇵🇰", "pakistan" to "🇵🇰",
+        "palestinian" to "🇵🇸", "palestine" to "🇵🇸",
+        "peruvian" to "🇵🇪", "peru" to "🇵🇪",
+        "polish" to "🇵🇱", "poland" to "🇵🇱",
+        "portuguese" to "🇵🇹", "portugal" to "🇵🇹",
+        "romanian" to "🇷🇴", "romania" to "🇷🇴",
+        "russian" to "🇷🇺", "russia" to "🇷🇺",
+        "salvadoran" to "🇸🇻", "el salvador" to "🇸🇻",
+        "serbian" to "🇷🇸", "serbia" to "🇷🇸",
+        "singaporean" to "🇸🇬", "singapore" to "🇸🇬",
+        "slovak" to "🇸🇰", "slovakia" to "🇸🇰",
+        "slovenian" to "🇸🇮", "slovenia" to "🇸🇮",
+        "spanish" to "🇪🇸", "spain" to "🇪🇸",
+        "swedish" to "🇸🇪", "sweden" to "🇸🇪",
+        "swiss" to "🇨🇭", "switzerland" to "🇨🇭",
+        "thai" to "🇹🇭", "thailand" to "🇹🇭",
+        "tunisian" to "🇹🇳", "tunisia" to "🇹🇳",
+        "turkish" to "🇹🇷", "turkey" to "🇹🇷",
+        "ukrainian" to "🇺🇦", "ukraine" to "🇺🇦",
+        "vietnamese" to "🇻🇳", "vietnam" to "🇻🇳"
+    )
+    
+    return adjectiveMap[normalized] ?: "🏳️"
 }
 
 @Composable
@@ -250,7 +296,9 @@ fun CollapsibleHeader(title: String, isExpanded: Boolean, onToggle: () -> Unit) 
             fontSize = 18.sp
         )
         Icon(
-            imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+            imageVector =
+                if (isExpanded) Icons.Default.KeyboardArrowUp
+                else Icons.Default.KeyboardArrowDown,
             contentDescription = if (isExpanded) "Collapse" else "Expand",
             tint = MaterialTheme.colorScheme.primary
         )
@@ -259,12 +307,9 @@ fun CollapsibleHeader(title: String, isExpanded: Boolean, onToggle: () -> Unit) 
 
 @Composable
 fun LoadingIndicator() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp),
-        contentAlignment = Alignment.Center
-    ) {
+    Box(modifier = Modifier
+        .fillMaxWidth()
+        .height(100.dp), contentAlignment = Alignment.Center) {
         CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
     }
 }
@@ -284,7 +329,11 @@ fun BrowseItem(text: String, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+        colors =
+            CardDefaults.cardColors(
+                containerColor =
+                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(12.dp)
     ) {

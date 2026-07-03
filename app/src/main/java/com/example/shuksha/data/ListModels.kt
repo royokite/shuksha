@@ -9,7 +9,9 @@ data class AreaListResponse(
 
 data class AreaItem(
     @SerializedName("strArea")
-    val strArea: String
+    val strArea: String? = null,
+    @SerializedName("strCountry")
+    val strCountry: String? = null
 )
 
 data class CategoryListResponse(
