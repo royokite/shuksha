@@ -15,14 +15,22 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.shuksha.data.AreaItem
 import com.example.shuksha.data.CategoryItem
 
-enum class BrowseSection { CATEGORIES, CUISINE, LETTERS, NONE }
+enum class BrowseSection {
+    CATEGORIES,
+    CUISINE,
+    LETTERS,
+    NONE
+}
 
 @Composable
 fun BrowseScreen(
@@ -41,10 +49,11 @@ fun BrowseScreen(
     val alphabet = ('A'..'Z').map { it.toString() }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .statusBarsPadding()
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .statusBarsPadding()
     ) {
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
@@ -73,7 +82,8 @@ fun BrowseScreen(
                     isExpanded = openSection == BrowseSection.CATEGORIES,
                     onToggle = {
                         openSection =
-                            if (openSection == BrowseSection.CATEGORIES) BrowseSection.NONE else BrowseSection.CATEGORIES
+                            if (openSection == BrowseSection.CATEGORIES) BrowseSection.NONE
+                            else BrowseSection.CATEGORIES
                     }
                 )
             }
@@ -103,25 +113,21 @@ fun BrowseScreen(
                     isExpanded = openSection == BrowseSection.CUISINE,
                     onToggle = {
                         openSection =
-                            if (openSection == BrowseSection.CUISINE) BrowseSection.NONE else BrowseSection.CUISINE
+                            if (openSection == BrowseSection.CUISINE) BrowseSection.NONE
+                            else BrowseSection.CUISINE
                     }
                 )
             }
 
             if (openSection == BrowseSection.CUISINE) {
                 if (isLoadingAreas) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        LoadingIndicator()
-                    }
+                    item(span = { GridItemSpan(maxLineSpan) }) { LoadingIndicator() }
                 } else {
-                    items(
-                        areas.filter {
-                            (it.strCountry?.lowercase()
-                                ?: it.strArea?.lowercase() ?: "") != "unknown"
-                        }
-                    ) { area ->
-                        val countryName = area.strCountry ?: area.strArea ?: "Unknown"
-                        CuisineItem(area = countryName, onClick = { onAreaClick(countryName) })
+                    items(areas.filter { it.strArea?.lowercase() != "unknown" }) { area ->
+                        CuisineItem(
+                            area = area.strArea ?: "Unknown",
+                            onClick = { onAreaClick(area.strArea ?: "") }
+                        )
                     }
                 }
             }
@@ -168,7 +174,7 @@ fun BrowseScreen(
 
 @Composable
 fun CuisineItem(area: String, onClick: () -> Unit) {
-    val flag = getFlagEmoji(area)
+    val countryCode = getCountryCode(area)
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -188,8 +194,19 @@ fun CuisineItem(area: String, onClick: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(text = flag, fontSize = 28.sp)
-            Spacer(modifier = Modifier.height(4.dp))
+            if (countryCode != null) {
+                AsyncImage(
+                    model = "https://flagcdn.com/w80/$countryCode.png",
+                    contentDescription = "$area flag",
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(4.dp)),
+                    contentScale = ContentScale.Fit
+                )
+            } else {
+                Text(text = "🏳️", fontSize = 24.sp)
+            }
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = area,
                 style = MaterialTheme.typography.titleSmall,
@@ -201,81 +218,148 @@ fun CuisineItem(area: String, onClick: () -> Unit) {
     }
 }
 
-fun getFlagEmoji(area: String): String {
-    val normalized = area.lowercase()
-    
-    // Try direct adjective match first
-    val adjectiveMap = mapOf(
-        "american" to "🇺🇸", "usa" to "🇺🇸", "united states" to "🇺🇸",
-        "australian" to "🇦🇺", "australia" to "🇦🇺",
-        "austrian" to "🇦🇹", "austria" to "🇦🇹",
-        "belgian" to "🇧🇪", "belgium" to "🇧🇪",
-        "brazilian" to "🇧🇷", "brazil" to "🇧🇷",
-        "british" to "🇬🇧", "uk" to "🇬🇧", "united kingdom" to "🇬🇧",
-        "bulgarian" to "🇧🇬", "bulgaria" to "🇧🇬",
-        "cambodian" to "🇰🇭", "cambodia" to "🇰🇭",
-        "canadian" to "🇨🇦", "canada" to "🇨🇦",
-        "chilean" to "🇨🇱", "chile" to "🇨🇱",
-        "chinese" to "🇨🇳", "china" to "🇨🇳",
-        "croatian" to "🇭🇷", "croatia" to "🇭🇷",
-        "cuban" to "🇨🇺", "cuba" to "🇨🇺",
-        "cypriot" to "🇨🇾", "cyprus" to "🇨🇾",
-        "czech" to "🇨🇿", "czechia" to "🇨🇿", "czech republic" to "🇨🇿",
-        "danish" to "🇩🇰", "denmark" to "🇩🇰",
-        "dutch" to "🇳🇱", "netherlands" to "🇳🇱",
-        "ecuadorian" to "🇪🇨", "ecuador" to "🇪🇨",
-        "egyptian" to "🇪🇬", "egypt" to "🇪🇬",
-        "estonian" to "🇪🇪", "estonia" to "🇪🇪",
-        "finnish" to "🇫🇮", "finland" to "🇫🇮",
-        "filipino" to "🇵🇭", "philippines" to "🇵🇭",
-        "french" to "🇫🇷", "france" to "🇫🇷",
-        "german" to "🇩🇪", "germany" to "🇩🇪",
-        "greek" to "🇬🇷", "greece" to "🇬🇷",
-        "hungarian" to "🇭🇺", "hungary" to "🇭🇺",
-        "icelandic" to "🇮🇸", "iceland" to "🇮🇸",
-        "indian" to "🇮🇳", "india" to "🇮🇳",
-        "indonesian" to "🇮🇩", "indonesia" to "🇮🇩",
-        "irish" to "🇮🇪", "ireland" to "🇮🇪",
-        "israeli" to "🇮🇱", "israel" to "🇮🇱",
-        "italian" to "🇮🇹", "italy" to "🇮🇹",
-        "jamaican" to "🇯🇲", "jamaica" to "🇯🇲",
-        "japanese" to "🇯🇵", "japan" to "🇯🇵",
-        "kenyan" to "🇰🇪", "kenya" to "🇰🇪",
-        "korean" to "🇰🇷", "korea" to "🇰🇷", "south korea" to "🇰🇷",
-        "kosovan" to "🇽🇰", "kosovo" to "🇽🇰",
-        "latvian" to "🇱🇻", "latvia" to "🇱🇻",
-        "lithuanian" to "🇱🇹", "lithuania" to "🇱🇹",
-        "luxembourgish" to "🇱🇺", "luxembourg" to "🇱🇺",
-        "macedonian" to "🇲🇰", "north macedonia" to "🇲🇰",
-        "malaysian" to "🇲🇾", "malaysia" to "🇲🇾",
-        "maltese" to "🇲🇹", "malta" to "🇲🇹",
-        "mexican" to "🇲🇽", "mexico" to "🇲🇽",
-        "moldovan" to "🇲🇩", "moldova" to "🇲🇩",
-        "moroccan" to "🇲🇦", "morocco" to "🇲🇦",
-        "norwegian" to "🇳🇴", "norway" to "🇳🇴",
-        "pakistani" to "🇵🇰", "pakistan" to "🇵🇰",
-        "palestinian" to "🇵🇸", "palestine" to "🇵🇸",
-        "peruvian" to "🇵🇪", "peru" to "🇵🇪",
-        "polish" to "🇵🇱", "poland" to "🇵🇱",
-        "portuguese" to "🇵🇹", "portugal" to "🇵🇹",
-        "romanian" to "🇷🇴", "romania" to "🇷🇴",
-        "russian" to "🇷🇺", "russia" to "🇷🇺",
-        "salvadoran" to "🇸🇻", "el salvador" to "🇸🇻",
-        "serbian" to "🇷🇸", "serbia" to "🇷🇸",
-        "singaporean" to "🇸🇬", "singapore" to "🇸🇬",
-        "slovak" to "🇸🇰", "slovakia" to "🇸🇰",
-        "slovenian" to "🇸🇮", "slovenia" to "🇸🇮",
-        "spanish" to "🇪🇸", "spain" to "🇪🇸",
-        "swedish" to "🇸🇪", "sweden" to "🇸🇪",
-        "swiss" to "🇨🇭", "switzerland" to "🇨🇭",
-        "thai" to "🇹🇭", "thailand" to "🇹🇭",
-        "tunisian" to "🇹🇳", "tunisia" to "🇹🇳",
-        "turkish" to "🇹🇷", "turkey" to "🇹🇷",
-        "ukrainian" to "🇺🇦", "ukraine" to "🇺🇦",
-        "vietnamese" to "🇻🇳", "vietnam" to "🇻🇳"
-    )
-    
-    return adjectiveMap[normalized] ?: "🏳️"
+fun getCountryCode(area: String): String? {
+    return when (area.lowercase()) {
+        // Adjective forms (MealDB strArea)
+        "american" -> "us"
+        "australian" -> "au"
+        "austrian" -> "at"
+        "belgian" -> "be"
+        "brazilian" -> "br"
+        "british" -> "gb"
+        "bulgarian" -> "bg"
+        "cambodian" -> "kh"
+        "canadian" -> "ca"
+        "chilean" -> "cl"
+        "chinese" -> "cn"
+        "croatian" -> "hr"
+        "cuban" -> "cu"
+        "cypriot" -> "cy"
+        "czech" -> "cz"
+        "danish" -> "dk"
+        "dutch" -> "nl"
+        "ecuadorian" -> "ec"
+        "egyptian" -> "eg"
+        "estonian" -> "ee"
+        "filipino" -> "ph"
+        "finnish" -> "fi"
+        "french" -> "fr"
+        "german" -> "de"
+        "greek" -> "gr"
+        "hungarian" -> "hu"
+        "icelandic" -> "is"
+        "indian" -> "in"
+        "indonesian" -> "id"
+        "irish" -> "ie"
+        "israeli" -> "il"
+        "italian" -> "it"
+        "jamaican" -> "jm"
+        "japanese" -> "jp"
+        "kenyan" -> "ke"
+        "korean" -> "kr"
+        "kosovan" -> "xk"
+        "latvian" -> "lv"
+        "lithuanian" -> "lt"
+        "luxembourgish" -> "lu"
+        "macedonian" -> "mk"
+        "malaysian" -> "my"
+        "maltese" -> "mt"
+        "mexican" -> "mx"
+        "moldovan" -> "md"
+        "moroccan" -> "ma"
+        "norwegian" -> "no"
+        "pakistani" -> "pk"
+        "palestinian" -> "ps"
+        "peruvian" -> "pe"
+        "polish" -> "pl"
+        "portuguese" -> "pt"
+        "romanian" -> "ro"
+        "russian" -> "ru"
+        "salvadoran" -> "sv"
+        "serbian" -> "rs"
+        "singaporean" -> "sg"
+        "slovak" -> "sk"
+        "slovenian" -> "si"
+        "spanish" -> "es"
+        "swedish" -> "se"
+        "swiss" -> "ch"
+        "thai" -> "th"
+        "tunisian" -> "tn"
+        "turkish" -> "tr"
+        "ukrainian" -> "ua"
+        "vietnamese" -> "vn"
+        // Country name forms (MealDB strCountry / alternate spellings)
+        "united states",
+        "usa" -> "us"
+
+        "australia" -> "au"
+        "austria" -> "at"
+        "belgium" -> "be"
+        "brazil" -> "br"
+        "united kingdom", "uk", "england", "scotland", "wales" -> "gb"
+        "bulgaria" -> "bg"
+        "cambodia" -> "kh"
+        "canada" -> "ca"
+        "chile" -> "cl"
+        "china" -> "cn"
+        "croatia" -> "hr"
+        "cuba" -> "cu"
+        "cyprus" -> "cy"
+        "czechia", "czech republic" -> "cz"
+        "denmark" -> "dk"
+        "netherlands", "holland" -> "nl"
+        "ecuador" -> "ec"
+        "egypt" -> "eg"
+        "estonia" -> "ee"
+        "philippines" -> "ph"
+        "finland" -> "fi"
+        "france" -> "fr"
+        "germany" -> "de"
+        "greece" -> "gr"
+        "hungary" -> "hu"
+        "iceland" -> "is"
+        "india" -> "in"
+        "indonesia" -> "id"
+        "ireland" -> "ie"
+        "israel" -> "il"
+        "italy" -> "it"
+        "jamaica" -> "jm"
+        "japan" -> "jp"
+        "kenya" -> "ke"
+        "south korea", "korea" -> "kr"
+        "kosovo" -> "xk"
+        "latvia" -> "lv"
+        "lithuania" -> "lt"
+        "luxembourg" -> "lu"
+        "north macedonia" -> "mk"
+        "malaysia" -> "my"
+        "malta" -> "mt"
+        "mexico" -> "mx"
+        "moldova" -> "md"
+        "morocco" -> "ma"
+        "norway" -> "no"
+        "pakistan" -> "pk"
+        "palestine" -> "ps"
+        "peru" -> "pe"
+        "poland" -> "pl"
+        "portugal" -> "pt"
+        "romania" -> "ro"
+        "russia" -> "ru"
+        "el salvador" -> "sv"
+        "serbia" -> "rs"
+        "singapore" -> "sg"
+        "slovakia" -> "sk"
+        "slovenia" -> "si"
+        "spain" -> "es"
+        "sweden" -> "se"
+        "switzerland" -> "ch"
+        "thailand" -> "th"
+        "tunisia" -> "tn"
+        "turkey", "türkiye" -> "tr"
+        "ukraine" -> "ua"
+        "vietnam" -> "vn"
+        else -> null
+    }
 }
 
 @Composable
