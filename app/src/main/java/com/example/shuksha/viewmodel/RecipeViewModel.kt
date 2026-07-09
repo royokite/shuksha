@@ -16,8 +16,12 @@ import com.example.shuksha.navigation.NavItem
 import com.example.shuksha.repository.RecipeRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
@@ -28,6 +32,10 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
 
     var isReady by mutableStateOf(false)
         private set
+
+    // UI Events (for Snackbars/Toasts)
+    private val _uiEvent = MutableSharedFlow<String>()
+    val uiEvent: SharedFlow<String> = _uiEvent.asSharedFlow()
 
     // Navigation
     var currentNavItem by mutableStateOf(NavItem.HOME)
@@ -100,8 +108,14 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
     val favorites: StateFlow<List<FavoriteMeal>> = favoriteDao.getAllFavorites()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val favoriteIds: StateFlow<Set<String>> = favorites.map { list -> list.map { it.idMeal }.toSet() }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
+    val favoriteIds: StateFlow<Set<String>> =
+        favorites.map { list -> list.map { it.idMeal }.toSet() }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
+
+    // Timer logic
+    var timerSecondsRemaining by mutableStateOf(0)
+    var isTimerRunning by mutableStateOf(false)
+        private set
 
     init {
         initialLoad()
@@ -130,9 +144,11 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
             NavItem.HOME -> if (latestMeals.isEmpty() && !isLoading) {
                 viewModelScope.launch { loadLatestMealsInternal() }
             }
+
             NavItem.EXPLORE -> if (randomMeals.isEmpty() && !isLoading) {
                 loadRandomMeal()
             }
+
             NavItem.SEARCH -> {}
             NavItem.BROWSE -> if (categories.isEmpty() && !isLoadingCategories) {
                 viewModelScope.launch { loadCategoriesAndAreasInternal() }
@@ -251,10 +267,34 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
             )
             if (isFav) {
                 favoriteDao.deleteFavorite(favMeal)
+                _uiEvent.emit("${meal.strMeal} removed from favorites")
             } else {
                 favoriteDao.insertFavorite(favMeal)
+                _uiEvent.emit("${meal.strMeal} added to favorites")
             }
         }
+    }
+
+    // Timer methods
+    fun startTimer(minutes: Int) {
+        stopTimer()
+        timerSecondsRemaining = minutes * 60
+        isTimerRunning = true
+        viewModelScope.launch {
+            while (timerSecondsRemaining > 0 && isTimerRunning) {
+                delay(1000)
+                if (isTimerRunning) timerSecondsRemaining--
+            }
+            if (timerSecondsRemaining == 0 && isTimerRunning) {
+                isTimerRunning = false
+                _uiEvent.emit("Timer finished!")
+            }
+        }
+    }
+
+    fun stopTimer() {
+        isTimerRunning = false
+        timerSecondsRemaining = 0
     }
 
     fun loadRecipesByCategory(category: String) {
