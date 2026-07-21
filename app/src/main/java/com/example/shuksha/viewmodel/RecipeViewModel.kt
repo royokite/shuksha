@@ -7,28 +7,21 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.example.shuksha.data.Meal
-import com.example.shuksha.data.AreaItem
-import com.example.shuksha.data.CategoryItem
-import com.example.shuksha.data.FavoriteMeal
-import com.example.shuksha.data.AppDatabase
+import com.example.shuksha.data.*
 import com.example.shuksha.navigation.NavItem
 import com.example.shuksha.repository.RecipeRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 
 class RecipeViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = RecipeRepository()
-    private val favoriteDao = AppDatabase.getDatabase(application).favoriteMealDao()
+    private val database = AppDatabase.getDatabase(application)
+    private val favoriteDao = database.favoriteMealDao()
+    private val shoppingDao = database.shoppingDao()
+    private val customRecipeDao = database.customRecipeDao()
 
     var isReady by mutableStateOf(false)
         private set
@@ -37,70 +30,59 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
     private val _uiEvent = MutableSharedFlow<String>()
     val uiEvent: SharedFlow<String> = _uiEvent.asSharedFlow()
 
+    // Auth state (Simplified for now)
+    var isLoggedIn by mutableStateOf(false)
+        private set
+    var userEmail by mutableStateOf("")
+        private set
+
     // Navigation
     var currentNavItem by mutableStateOf(NavItem.HOME)
         private set
 
-    // Home screen
+    // Data states
     var latestMeals by mutableStateOf<List<Meal>>(emptyList())
         private set
-
-    // Search screen
     var meals by mutableStateOf<List<Meal>>(emptyList())
         private set
-
     var isLoading by mutableStateOf(false)
         private set
-
     var errorMessage by mutableStateOf<String?>(null)
         private set
-
     var searchQuery by mutableStateOf("")
         private set
 
     // Detail screen
     var selectedMeal by mutableStateOf<Meal?>(null)
         private set
-
     var detailIsLoading by mutableStateOf(false)
         private set
-
     var detailErrorMessage by mutableStateOf<String?>(null)
         private set
 
-    // Explore screen
+    // Explore & Browse
     var randomMeals by mutableStateOf<List<Meal>>(emptyList())
         private set
-
-    // Browse screen
     var categories by mutableStateOf<List<CategoryItem>>(emptyList())
         private set
-
     var areas by mutableStateOf<List<AreaItem>>(emptyList())
         private set
-
     var isLoadingCategories by mutableStateOf(false)
         private set
-
     var isLoadingAreas by mutableStateOf(false)
         private set
 
-    // Browse drill-down state
+    // Browse drill-down
     var browseByLetterResults by mutableStateOf<List<Meal>>(emptyList())
         private set
-
     var selectedLetter by mutableStateOf("")
         private set
-
     var browseCategoryResults by mutableStateOf<List<Meal>>(emptyList())
         private set
-
     var selectedCategory by mutableStateOf("")
         private set
-
     var browseAreaResults by mutableStateOf<List<Meal>>(emptyList())
         private set
-
     var selectedArea by mutableStateOf("")
         private set
 
@@ -108,9 +90,16 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
     val favorites: StateFlow<List<FavoriteMeal>> = favoriteDao.getAllFavorites()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val favoriteIds: StateFlow<Set<String>> =
-        favorites.map { list -> list.map { it.idMeal }.toSet() }
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
+    val favoriteIds: StateFlow<Set<String>> = favorites.map { list -> list.map { it.idMeal }.toSet() }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptySet())
+
+    // Shopping List
+    val shoppingList: StateFlow<List<ShoppingItem>> = shoppingDao.getAllItems()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Custom Recipes
+    val customRecipes: StateFlow<List<CustomRecipe>> = customRecipeDao.getAllCustomRecipes()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // Timer logic
     var timerSecondsRemaining by mutableStateOf(0)
@@ -138,23 +127,28 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun login(email: String) {
+        userEmail = email
+        isLoggedIn = true
+        viewModelScope.launch { _uiEvent.emit("Logged in as $email") }
+    }
+
+    fun logout() {
+        isLoggedIn = false
+        userEmail = ""
+        viewModelScope.launch { _uiEvent.emit("Logged out") }
+    }
+
     fun navigateTo(item: NavItem) {
         currentNavItem = item
         when (item) {
             NavItem.HOME -> if (latestMeals.isEmpty() && !isLoading) {
                 viewModelScope.launch { loadLatestMealsInternal() }
             }
-
-            NavItem.EXPLORE -> if (randomMeals.isEmpty() && !isLoading) {
-                loadRandomMeal()
-            }
-
-            NavItem.SEARCH -> {}
             NavItem.BROWSE -> if (categories.isEmpty() && !isLoadingCategories) {
                 viewModelScope.launch { loadCategoriesAndAreasInternal() }
             }
-
-            NavItem.FAVORITES -> {}
+            else -> {}
         }
     }
 
@@ -192,19 +186,11 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
         try {
             isLoadingCategories = true
             categories = repository.getCategoryList()
-        } catch (e: Exception) {
-            errorMessage = e.message
-        } finally {
-            isLoadingCategories = false
-        }
-
-        try {
-            isLoadingAreas = true
             areas = repository.getAreaList()
         } catch (e: Exception) {
             errorMessage = e.message
         } finally {
-            isLoadingAreas = false
+            isLoadingCategories = false
         }
     }
 
@@ -213,15 +199,11 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun performSearch() {
-        loadRecipes(searchQuery)
-    }
-
-    private fun loadRecipes(query: String = "beef") {
         viewModelScope.launch {
             isLoading = true
             errorMessage = null
             try {
-                meals = repository.searchRecipes(query)
+                meals = repository.searchRecipes(searchQuery)
             } catch (e: Exception) {
                 errorMessage = e.message
             } finally {
@@ -267,15 +249,54 @@ class RecipeViewModel(application: Application) : AndroidViewModel(application) 
             )
             if (isFav) {
                 favoriteDao.deleteFavorite(favMeal)
-                _uiEvent.emit("${meal.strMeal} removed from favorites")
+                _uiEvent.emit("Removed from favorites")
             } else {
                 favoriteDao.insertFavorite(favMeal)
-                _uiEvent.emit("${meal.strMeal} added to favorites")
+                _uiEvent.emit("Added to favorites")
             }
         }
     }
 
-    // Timer methods
+    // Shopping List Actions
+    fun addToShoppingList(ingredient: String) {
+        viewModelScope.launch {
+            shoppingDao.insertItem(ShoppingItem(name = ingredient))
+            _uiEvent.emit("Added $ingredient to shopping list")
+        }
+    }
+
+    fun toggleShoppingItem(item: ShoppingItem) {
+        viewModelScope.launch {
+            shoppingDao.updateItem(item.copy(isChecked = !item.isChecked))
+        }
+    }
+
+    fun removeShoppingItem(item: ShoppingItem) {
+        viewModelScope.launch {
+            shoppingDao.deleteItem(item)
+        }
+    }
+
+    fun clearCompletedShopping() {
+        viewModelScope.launch {
+            shoppingDao.clearCompleted()
+        }
+    }
+
+    // Custom Recipe Actions
+    fun saveCustomRecipe(title: String, category: String, ingredients: String, instructions: String) {
+        viewModelScope.launch {
+            customRecipeDao.insertRecipe(CustomRecipe(
+                title = title,
+                category = category,
+                ingredients = ingredients,
+                instructions = instructions
+            ))
+            _uiEvent.emit("Recipe '$title' saved!")
+        }
+    }
+
+    // Timer logic
     fun startTimer(minutes: Int) {
         stopTimer()
         timerSecondsRemaining = minutes * 60
