@@ -1,0 +1,11 @@
+- [x] Fix UI Overlaps
+    - [x] Add `navigationBarsPadding` to `BottomNavBar.kt`
+    - [x] Add `statusBarsPadding` to `RecipeDetailScreen.kt`
+- [x] Implement Long Screenshot Share
+    - [x] Create `file_paths.xml` for FileProvider
+    - [x] Update `AndroidManifest.xml` with FileProvider
+    - [x] Create `ScreenshotUtils.kt`
+    - [x] Update `RecipeDetailScreen.kt` with long screenshot logic
+- [x] Verify Changes
+    - [x] Build and test UI fixes
+    - [x] Test long screenshot share and gallery save

@@ -22,8 +22,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.rememberGraphicsLayer
+import androidx.compose.ui.unit.IntSize
 import coil.compose.AsyncImage
 import com.example.shuksha.data.Meal
+import com.example.shuksha.util.ScreenshotUtils
+import kotlinx.coroutines.launch
 
 @Composable
 fun RecipeDetailScreen(
@@ -38,7 +45,10 @@ fun RecipeDetailScreen(
     onAddToShoppingList: (String) -> Unit
 ) {
     var showTimerDialog by remember { mutableStateOf(false) }
+    var showShareOptions by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val graphicsLayer = rememberGraphicsLayer()
 
     Box(
         modifier = Modifier
@@ -66,28 +76,40 @@ fun RecipeDetailScreen(
             }
             meal != null -> {
                 Box(modifier = Modifier.fillMaxSize()) {
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .drawWithContent {
+                                graphicsLayer.record(
+                                    density = this,
+                                    layoutDirection = layoutDirection,
+                                    size = IntSize(size.width.toInt(), size.height.toInt()),
+                                ) {
+                                    this@drawWithContent.drawContent()
+                                }
+                                drawContent()
+                            }
+                    ) {
                         item {
+// ...
                             Row(
-                                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .statusBarsPadding()
+                                    .padding(8.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 IconButton(onClick = onBackClick) {
                                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colorScheme.primary)
                                 }
-                                IconButton(onClick = {
-                                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                        type = "text/plain"
-                                        putExtra(Intent.EXTRA_SUBJECT, meal.strMeal)
-                                        putExtra(Intent.EXTRA_TEXT, "Check out this recipe: ${meal.strMeal}\n\nIngredients:\n${meal.getIngredientsList().joinToString("\n") { "• ${it.second} ${it.first}" }}")
-                                    }
-                                    context.startActivity(Intent.createChooser(shareIntent, "Share Recipe"))
-                                }) {
+                                IconButton(onClick = { showShareOptions = true }) {
                                     Icon(Icons.Default.Share, contentDescription = "Share", tint = MaterialTheme.colorScheme.primary)
                                 }
                             }
                         }
+// ...
+// ... rest of the file ...
 
                         item {
                             AsyncImage(
@@ -211,6 +233,67 @@ fun RecipeDetailScreen(
                 }) { Text("Start") }
             },
             dismissButton = { TextButton(onClick = { showTimerDialog = false }) { Text("Cancel") } }
+        )
+    }
+
+    if (showShareOptions && meal != null) {
+        AlertDialog(
+            onDismissRequest = { showShareOptions = false },
+            title = { Text("Share Recipe") },
+            text = {
+                Column {
+                    TextButton(
+                        onClick = {
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_SUBJECT, meal.strMeal)
+                                putExtra(Intent.EXTRA_TEXT, "Check out this recipe: ${meal.strMeal}\n\nIngredients:\n${meal.getIngredientsList().joinToString("\n") { "• ${it.second} ${it.first}" }}\n\nInstructions:\n${meal.strInstructions}")
+                            }
+                            context.startActivity(Intent.createChooser(shareIntent, "Share Recipe"))
+                            showShareOptions = false
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Share as Text", modifier = Modifier.fillMaxWidth())
+                    }
+                    TextButton(
+                        onClick = {
+                            coroutineScope.launch {
+                                try {
+                                    val bitmap = graphicsLayer.toImageBitmap().asAndroidBitmap()
+                                    ScreenshotUtils.shareBitmap(context, bitmap, "recipe_${meal.idMeal}")
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                            }
+                            showShareOptions = false
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Share as Image", modifier = Modifier.fillMaxWidth())
+                    }
+                    TextButton(
+                        onClick = {
+                            coroutineScope.launch {
+                                try {
+                                    val bitmap = graphicsLayer.toImageBitmap().asAndroidBitmap()
+                                    ScreenshotUtils.saveBitmapToGallery(context, bitmap, "recipe_${meal.idMeal}")
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                            }
+                            showShareOptions = false
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Save to Gallery", modifier = Modifier.fillMaxWidth())
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showShareOptions = false }) { Text("Cancel") }
+            }
         )
     }
 }
